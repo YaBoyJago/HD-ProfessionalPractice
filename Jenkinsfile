@@ -1,17 +1,19 @@
 pipeline {
     agent any
+    tools {
+        // Specify the Node.js installation configured in Jenkins Global Tool Configuration
+        nodejs 'NodeJS'  // Use the name you configured for Node.js in Jenkins Global Tool Configuration
+    }
 
     stages {
-        // Stage 1: Checkout the repository from GitHub
+        // Stage 1: Checkout the repository
         stage('Checkout') {
             steps {
                 echo 'Checking out the repository...'
-                // Explicitly checkout the repository using the correct branch and credentials
                 checkout([$class: 'GitSCM', 
-                    branches: [[name: '*/main']],  // Adjust 'main' to 'master' if needed
-                    userRemoteConfigs: [[url: 'https://github.com/YaBoyJago/HD-ProfessionalPractice.git', credentialsId: '1a1cc6cb-8a76-4442-924e-5ed4f13d50c1']],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [[$class: 'CleanCheckout']]  // Ensures workspace is cleaned before checkout
+                    branches: [[name: '*/main']],  // Ensure 'main' is the correct branch, change to 'master' if needed
+                    userRemoteConfigs: [[url: 'https://github.com/YaBoyJago/HD-ProfessionalPractice.git', credentialsId: '2dfcb69e-e255-4ad8-b624-69dfe0d47b9a']],
+                    extensions: [[$class: 'CleanCheckout']]  // Clean workspace before checkout
                 ])
             }
         }
@@ -28,50 +30,50 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh 'npm test'  // Execute the tests defined in your package.json
+                sh 'npm test'  // Run tests (ensure you have a test script in package.json)
             }
         }
 
-        // Stage 4: Code Quality Analysis (placeholder for tools like SonarQube)
+        // Stage 4: Code Quality Analysis (Optional)
         stage('Code Quality Analysis') {
             steps {
                 echo 'Running code quality analysis...'
-                // Placeholder for code analysis tools like SonarQube or ESLint
-                // sh 'sonar-scanner'  // Uncomment if you have SonarQube or similar set up
+                // You can integrate tools like SonarQube here for code quality analysis
+                // Placeholder for SonarQube or any other code quality tool
+                // e.g., sh 'sonar-scanner'
             }
         }
 
-        // Stage 5: Deploy to test environment
+        // Stage 5: Deploy to Test Environment
         stage('Deploy to Test Environment') {
             steps {
                 echo 'Deploying to test environment...'
-                // You can add Docker or any other deployment steps here
-                // For now, we'll assume a basic deployment using npm start
-                sh 'npm start &'  // Starts the application in the background
+                // You can use Docker, Kubernetes, or other deployment tools
+                // Here, just running `npm start` as a placeholder
+                sh 'npm start &'  // Starts the app in the background
             }
         }
 
-        // Stage 6: Release to production
+        // Stage 6: Release to Production
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production...'
-                // Add your production deployment steps here, possibly using Docker, AWS, etc.
-                // For now, we assume the same npm start command (replace with actual production logic)
-                sh 'npm start &'  // Deploys to production environment (replace with actual commands)
+                // Replace this with your production deployment logic (e.g., Docker, AWS, etc.)
+                // Here, just running `npm start` as a placeholder
+                sh 'npm start &'  // Starts the app in the background (update this for real prod deploy)
             }
         }
 
-        // Stage 7: Monitoring and Alerting (optional)
+        // Stage 7: Monitoring and Alerting (Optional)
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
-                // Placeholder for tools like Datadog, New Relic, or Prometheus
-                // Add commands to set up monitoring here
+                // Integrate monitoring tools like Datadog, New Relic, or Prometheus here
+                // Placeholder for monitoring tool setup
             }
         }
     }
 
-    // Post-build actions
     post {
         always {
             echo 'Cleaning up...'
