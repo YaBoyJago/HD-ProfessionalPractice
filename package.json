@@ -12,7 +12,8 @@
     },
     "devDependencies": {
       "mocha": "^9.0.0",
-      "chai": "^4.3.4"
+      "chai": "^4.3.4",
+      "chai-http": "^4.3.0"
     },
     "author": "Adam",
     "license": "ISC"
