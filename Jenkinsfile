@@ -17,15 +17,15 @@ pipeline {
             }
         }
 
-        // Stage 2: Build the project and Docker image creation
+        // Stage 2: Build the project (packaging instead of Docker)
         stage('Build') {
             steps {
                 echo 'Building the project...'
                 sh 'npm install'  // Install project dependencies
 
-                // Docker build to create a container for the app
-                echo 'Creating build artifact (Docker image)...'
-                sh 'docker build -t my-app-image .'  // Ensure Dockerfile exists in the root
+                // Simulate creating a build artifact by zipping the project files
+                echo 'Creating build artifact...'
+                sh 'zip -r my-app-artifact.zip *'  // This creates a zip archive of the project
             }
         }
 
@@ -33,15 +33,15 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running automated tests...'
-                sh 'npm test'  // Run tests using Mocha or other frameworks (e.g., Selenium or JUnit for other applications)
+                sh 'npm test'  // Run tests using Mocha or other frameworks
             }
         }
 
-        // Stage 4: Code Quality Analysis with SonarQube or CodeClimate
+        // Stage 4: Code Quality Analysis with SonarQube or another tool
         stage('Code Quality Analysis') {
             steps {
                 echo 'Running code quality analysis...'
-                // Ensure SonarQube is properly configured in your Jenkins environment or use CodeClimate
+                // Use SonarQube or CodeClimate if set up
                 sh '''
                 sonar-scanner \
                   -Dsonar.projectKey=my-app \
@@ -52,38 +52,30 @@ pipeline {
             }
         }
 
-        // Stage 5: Deploy to Test Environment using Docker
+        // Stage 5: Deploy to Test Environment without Docker
         stage('Deploy to Test Environment') {
             steps {
                 echo 'Deploying to test environment...'
-                // Run the Docker container in the test environment
-                sh 'docker run -d -p 3000:3000 --name my-app-test my-app-image'  // Deploy the app to a container
+                // Run the application in the background as a placeholder for deployment
+                sh 'npm start &'  // Deploys the app locally for testing
             }
         }
 
-        // Stage 6: Release to Production (using Docker or another deployment tool)
+        // Stage 6: Release to Production (simulate deployment)
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production...'
-                // Tag and push Docker image to a Docker registry like Docker Hub or AWS ECR
-                sh '''
-                docker tag my-app-image my-docker-repo/my-app-image:latest
-                docker push my-docker-repo/my-app-image:latest
-                '''
-                // Here, you can add production deployment logic for services like AWS, Kubernetes, or Elastic Beanstalk
-                echo 'Production deployment would go here...'
+                // Simulate a production deployment. This can be AWS, Elastic Beanstalk, or another service.
+                echo 'Production deployment logic would go here...'
+                sh 'npm start &'  // Simulate running the application in production
             }
         }
 
-        // Stage 7: Monitoring and Alerting (Optional, with Datadog or New Relic)
+        // Stage 7: Monitoring and Alerting (Optional)
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
-                // Example placeholder command for monitoring setup
-                // For Datadog, it could be a command like this (requires the Datadog agent):
-                // sh 'datadog-agent check'
-                // For Prometheus, ensure you have proper metrics exposed in the app
-                echo 'Monitoring setup would go here...'
+                // Placeholder for setting up monitoring tools like Datadog, Prometheus, etc.
             }
         }
     }
@@ -91,9 +83,8 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            // Clean up Docker containers after deployment
-            sh 'docker stop my-app-test || true'
-            sh 'docker rm my-app-test || true'
+            // Clean up after the test run
+            sh 'pkill -f "npm start" || true'  // Stop the running instance of the app
         }
         success {
             echo 'Pipeline completed successfully!'
