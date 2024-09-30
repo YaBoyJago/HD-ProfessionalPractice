@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        nodejs 'NodeJS'  // Use the Node.js installation configured in Jenkins Global Tool Configuration
+        nodejs 'NodeJS'  // Ensure the correct Node.js version is installed
     }
 
     stages {
@@ -19,7 +19,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building the project...'
-                sh 'npm install'  // Install project dependencies
+                sh 'npm install'  // Install dependencies
             }
         }
 
@@ -27,7 +27,7 @@ pipeline {
             steps {
                 echo 'Running tests...'
 
-                // Ensure port 3000 is not in use before starting the app
+                // Ensure port 3000 is not in use before running the tests
                 sh '''
                 if lsof -i :3000 | grep LISTEN; then 
                   echo "Port 3000 is in use, freeing it...";
@@ -37,16 +37,16 @@ pipeline {
                 fi
                 '''
 
-                // Run the app in the background using nohup
+                // Start the app in the background
                 sh 'nohup npm start & sleep 5'
 
-                // Run tests using npm
+                // Run tests
                 sh 'npm test'
 
-                // Kill the background app process after testing
+                // Kill the app after testing
                 sh '''
                 if lsof -i :3000 | grep LISTEN; then
-                  echo "Stopping the app running on port 3000...";
+                  echo "Stopping app running on port 3000...";
                   kill -9 $(lsof -t -i :3000);
                 fi
                 '''
@@ -57,7 +57,7 @@ pipeline {
             steps {
                 echo 'Deploying to test environment...'
 
-                // Ensure port is free before deployment
+                // Ensure port 3000 is not in use before deployment
                 sh '''
                 if lsof -i :3000 | grep LISTEN; then 
                   echo "Port 3000 is in use, freeing it...";
@@ -68,7 +68,7 @@ pipeline {
                 '''
 
                 // Run the app in the background for deployment
-                sh 'nohup npm start &'
+                sh 'nohup npm start & sleep 5'
             }
         }
 
