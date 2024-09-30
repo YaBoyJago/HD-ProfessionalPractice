@@ -26,15 +26,20 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                
-                // Run the app in the background
-                sh 'npm start &'
-                
+
+                // Ensure the port is not in use
+                sh '''
+                lsof -i :3000 | grep LISTEN && kill -9 $(lsof -t -i :3000) || echo "Port 3000 is free"
+                '''
+
+                // Run the app in the background using nohup (instead of pm2)
+                sh 'nohup npm start &'
+
                 // Run tests
                 sh 'npm test'
 
-                // Kill the background process (app running on port 3000)
-                sh 'fuser -k 3000/tcp || true'  // Ensure the app is killed after testing
+                // Kill the background process after testing
+                sh 'lsof -i :3000 | grep LISTEN && kill -9 $(lsof -t -i :3000) || echo "No process to kill"'
             }
         }
 
@@ -42,13 +47,13 @@ pipeline {
             steps {
                 echo 'Deploying to test environment...'
 
-                // Run the app in the background using PM2 to keep it running
-                sh 'pm2 stop my-app || true'
-                sh 'pm2 delete my-app || true'
-                sh 'pm2 start npm --name my-app -- start'
+                // Ensure port is free before deployment
+                sh '''
+                lsof -i :3000 | grep LISTEN && kill -9 $(lsof -t -i :3000) || echo "Port 3000 is free"
+                '''
 
-                // Ensure PM2 keeps the app running in the background
-                sh 'pm2 save'
+                // Run the app in the background using nohup
+                sh 'nohup npm start &'
             }
         }
 
@@ -63,7 +68,7 @@ pipeline {
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
-                // Placeholder for monitoring setup (e.g., using PM2 monitoring or third-party tools)
+                // Placeholder for monitoring setup (e.g., using third-party tools)
                 echo 'Monitoring setup would go here...'
             }
         }
@@ -73,9 +78,7 @@ pipeline {
         always {
             echo 'Cleaning up...'
             // Ensure that any leftover processes are stopped
-            sh 'pm2 stop my-app || true'
-            sh 'pm2 delete my-app || true'
-            sh 'fuser -k 3000/tcp || true'  // Ensure port 3000 is cleared
+            sh 'lsof -i :3000 | grep LISTEN && kill -9 $(lsof -t -i :3000) || echo "No process to kill"'
         }
         success {
             echo 'Pipeline completed successfully!'
