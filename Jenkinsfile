@@ -10,21 +10,22 @@ pipeline {
             steps {
                 echo 'Checking out the repository...'
                 checkout([$class: 'GitSCM', 
-                    branches: [[name: '*/main']],  // Use 'main' branch, adjust if necessary
+                    branches: [[name: '*/main']],  // Ensure 'main' is the correct branch, change to 'master' if needed
                     userRemoteConfigs: [[url: 'https://github.com/YaBoyJago/HD-ProfessionalPractice.git', credentialsId: '2dfcb69e-e255-4ad8-b624-69dfe0d47b9a']],
-                    extensions: [[$class: 'CleanCheckout']]  // Ensure a clean workspace before checkout
+                    extensions: [[$class: 'CleanCheckout']]  // Clean workspace before checkout
                 ])
             }
         }
 
-        // Stage 2: Build the project and create a build artifact (like a Docker image)
+        // Stage 2: Build the project and Docker image creation
         stage('Build') {
             steps {
                 echo 'Building the project...'
                 sh 'npm install'  // Install project dependencies
-                echo 'Creating a Docker image as the build artifact...'
-                // Build a Docker image for deployment
-                sh 'docker build -t my-app-image .'  // Ensure you have a Dockerfile in the root directory
+
+                // Docker build to create a container for the app
+                echo 'Building Docker image...'
+                sh 'docker build -t my-app-image .'  // Ensure Dockerfile exists in the root
             }
         }
 
@@ -32,48 +33,57 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh 'npm test'  // Run tests using Mocha or any other test framework
+                sh 'npm test'  // Run tests using Mocha or other frameworks
             }
         }
 
-        // Stage 4: Code Quality Analysis using SonarQube (or any other tool)
+        // Stage 4: Code Quality Analysis with SonarQube
         stage('Code Quality Analysis') {
             steps {
-                echo 'Running code quality analysis...'
-                // Integrate SonarQube for code quality analysis
-                // Replace 'sonar-scanner' with actual SonarQube command or script if you have it installed
-                sh 'sonar-scanner -Dsonar.projectKey=MyApp -Dsonar.sources=src -Dsonar.host.url=http://localhost:9000 -Dsonar.login=your-sonar-token'
+                echo 'Running code quality analysis with SonarQube...'
+                // Ensure SonarQube is properly configured in your Jenkins environment
+                sh '''
+                sonar-scanner \
+                  -Dsonar.projectKey=my-app \
+                  -Dsonar.sources=src \
+                  -Dsonar.host.url=http://localhost:9000 \
+                  -Dsonar.login=your-sonar-token
+                '''
             }
         }
 
-        // Stage 5: Deploy to Test Environment (Using Docker or another tool)
+        // Stage 5: Deploy to Test Environment using Docker
         stage('Deploy to Test Environment') {
             steps {
                 echo 'Deploying to test environment...'
-                // Deploy the Docker container to a test environment
-                sh 'docker run -d -p 3000:3000 --name my-app-test my-app-image'  // Replace with actual deployment process if needed
+                // Run the Docker container in the test environment
+                sh 'docker run -d -p 3000:3000 --name my-app-test my-app-image'
             }
         }
 
-        // Stage 6: Release to Production (For example, using AWS Elastic Beanstalk or Docker)
+        // Stage 6: Release to Production (e.g., using Docker and pushing to a registry)
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production...'
-                // Deploy to production (replace with real production deployment logic)
-                // If using Docker, push the image to a registry and deploy to production
-                sh 'docker tag my-app-image my-docker-repo/my-app-image:latest'
-                sh 'docker push my-docker-repo/my-app-image:latest'
-                // Add deployment to AWS Elastic Beanstalk, Kubernetes, etc., as required
+                // Tag and push Docker image to a Docker registry like Docker Hub
+                sh '''
+                docker tag my-app-image my-docker-repo/my-app-image:latest
+                docker push my-docker-repo/my-app-image:latest
+                '''
+                // Production deployment logic would go here (e.g., AWS, Kubernetes)
+                echo 'Production deployment would go here...'
             }
         }
 
-        // Stage 7: Monitoring and Alerting (Optional, with tools like Datadog or New Relic)
+        // Stage 7: Monitoring and Alerting (Optional, with Datadog or Prometheus)
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
-                // Set up Datadog, New Relic, or Prometheus to monitor the application
-                // Replace the command below with real monitoring setup
-                sh 'datadog-agent check'  // Example: Datadog Agent command
+                // Example placeholder command for monitoring setup
+                // For Datadog, it could be a command like this (requires the Datadog agent):
+                // sh 'datadog-agent check'
+                // For Prometheus, ensure you have proper metrics exposed in the app
+                echo 'Monitoring setup would go here...'
             }
         }
     }
@@ -81,7 +91,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            // Clean up resources (for example, stopping Docker containers)
+            // Clean up Docker containers after deployment
             sh 'docker stop my-app-test || true'
             sh 'docker rm my-app-test || true'
         }
