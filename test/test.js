@@ -1,23 +1,11 @@
-const chai = require('chai');
-const chaiHttp = require('chai-http');
-const app = require('../app');  // Assuming your app is in app.js
-const server = app.listen(3000);
-chai.should();
-chai.use(chaiHttp);
+const request = require('supertest');
+const app = require('../app'); // Adjust the path if necessary
 
-describe('App', () => {
-  after(() => {
-    // Ensure the server is closed after the tests
-    server.close();
-  });
-
-  it('should return the HTML file', (done) => {
-    chai.request(app)
+describe('GET /', function () {
+  it('should return the HTML file', function (done) {
+    request(app)
       .get('/')
-      .end((err, res) => {
-        res.should.have.status(200);
-        res.should.be.html;
-        done();
-      });
+      .expect('Content-Type', /html/)
+      .expect(200, done);
   });
 });
