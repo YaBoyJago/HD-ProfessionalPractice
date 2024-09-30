@@ -26,7 +26,15 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh 'npm test'  // Run tests
+                
+                // Run the app in the background
+                sh 'npm start &'
+                
+                // Run tests
+                sh 'npm test'
+
+                // Kill the background process (app running on port 3000)
+                sh 'fuser -k 3000/tcp || true'  // Ensure the app is killed after testing
             }
         }
 
@@ -34,11 +42,9 @@ pipeline {
             steps {
                 echo 'Deploying to test environment...'
 
-                // Stop any existing running instance of the app
+                // Run the app in the background using PM2 to keep it running
                 sh 'pm2 stop my-app || true'
                 sh 'pm2 delete my-app || true'
-
-                // Deploy the app using PM2
                 sh 'pm2 start npm --name my-app -- start'
 
                 // Ensure PM2 keeps the app running in the background
@@ -49,9 +55,7 @@ pipeline {
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production...'
-
                 // Simulate production deployment (e.g., SSH to production server and deploy)
-                // For now, this example keeps the application running in the test environment as "production".
                 echo 'Production deployment simulated in this environment...'
             }
         }
@@ -59,7 +63,7 @@ pipeline {
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
-                // Placeholder for monitoring setup (e.g., using tools like PM2 monitoring, or third-party tools)
+                // Placeholder for monitoring setup (e.g., using PM2 monitoring or third-party tools)
                 echo 'Monitoring setup would go here...'
             }
         }
@@ -68,9 +72,10 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            // Ensure that if there are multiple instances, they are cleaned up
+            // Ensure that any leftover processes are stopped
             sh 'pm2 stop my-app || true'
             sh 'pm2 delete my-app || true'
+            sh 'fuser -k 3000/tcp || true'  // Ensure port 3000 is cleared
         }
         success {
             echo 'Pipeline completed successfully!'
