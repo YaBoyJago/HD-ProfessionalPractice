@@ -24,7 +24,7 @@ pipeline {
                 sh 'npm install'  // Install project dependencies
 
                 // Docker build to create a container for the app
-                echo 'Building Docker image...'
+                echo 'Creating build artifact (Docker image)...'
                 sh 'docker build -t my-app-image .'  // Ensure Dockerfile exists in the root
             }
         }
@@ -32,16 +32,16 @@ pipeline {
         // Stage 3: Run automated tests
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                sh 'npm test'  // Run tests using Mocha or other frameworks
+                echo 'Running automated tests...'
+                sh 'npm test'  // Run tests using Mocha or other frameworks (e.g., Selenium or JUnit for other applications)
             }
         }
 
-        // Stage 4: Code Quality Analysis with SonarQube
+        // Stage 4: Code Quality Analysis with SonarQube or CodeClimate
         stage('Code Quality Analysis') {
             steps {
-                echo 'Running code quality analysis with SonarQube...'
-                // Ensure SonarQube is properly configured in your Jenkins environment
+                echo 'Running code quality analysis...'
+                // Ensure SonarQube is properly configured in your Jenkins environment or use CodeClimate
                 sh '''
                 sonar-scanner \
                   -Dsonar.projectKey=my-app \
@@ -57,25 +57,25 @@ pipeline {
             steps {
                 echo 'Deploying to test environment...'
                 // Run the Docker container in the test environment
-                sh 'docker run -d -p 3000:3000 --name my-app-test my-app-image'
+                sh 'docker run -d -p 3000:3000 --name my-app-test my-app-image'  // Deploy the app to a container
             }
         }
 
-        // Stage 6: Release to Production (e.g., using Docker and pushing to a registry)
+        // Stage 6: Release to Production (using Docker or another deployment tool)
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production...'
-                // Tag and push Docker image to a Docker registry like Docker Hub
+                // Tag and push Docker image to a Docker registry like Docker Hub or AWS ECR
                 sh '''
                 docker tag my-app-image my-docker-repo/my-app-image:latest
                 docker push my-docker-repo/my-app-image:latest
                 '''
-                // Production deployment logic would go here (e.g., AWS, Kubernetes)
+                // Here, you can add production deployment logic for services like AWS, Kubernetes, or Elastic Beanstalk
                 echo 'Production deployment would go here...'
             }
         }
 
-        // Stage 7: Monitoring and Alerting (Optional, with Datadog or Prometheus)
+        // Stage 7: Monitoring and Alerting (Optional, with Datadog or New Relic)
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
