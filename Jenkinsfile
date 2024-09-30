@@ -2,6 +2,18 @@ pipeline {
     agent any
 
     stages {
+        stage('Checkout') {
+            steps {
+                // Explicitly checkout the repository from GitHub using the correct credentials and URL
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: '*/main']],  // Make sure you use the correct branch (e.g., 'main' or 'master')
+                    userRemoteConfigs: [[url: 'https://github.com/YaBoyJago/HD-ProfessionalPractice.git', credentialsId: '1a1cc6cb-8a76-4442-924e-5ed4f13d50c1']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [[$class: 'CleanCheckout']]  // Clean the workspace before checkout
+                ])
+            }
+        }
+
         stage('Build') {
             steps {
                 echo 'Building the project...'
